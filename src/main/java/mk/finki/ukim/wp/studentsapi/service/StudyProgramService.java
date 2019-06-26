@@ -10,6 +10,8 @@ public interface StudyProgramService {
 
     void addStudyProgram(String name);
 
+    StudyProgram getStudyProgramByName(String studyProgramName);
+
     void deleteStudyProgram(Long id);
 
     void updateStudyProgram(StudyProgram studyProgram);

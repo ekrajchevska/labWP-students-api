@@ -3,6 +3,7 @@ package mk.finki.ukim.wp.studentsapi.service.impl;
 import mk.finki.ukim.wp.studentsapi.model.Student;
 import mk.finki.ukim.wp.studentsapi.model.StudentInput;
 import mk.finki.ukim.wp.studentsapi.model.StudyProgram;
+import mk.finki.ukim.wp.studentsapi.model.exceptions.ParameterMissingException;
 import mk.finki.ukim.wp.studentsapi.repository.StudentRepository;
 import mk.finki.ukim.wp.studentsapi.repository.StudyProgramRepository;
 import mk.finki.ukim.wp.studentsapi.service.StudentService;
@@ -16,9 +17,9 @@ import java.util.Optional;
 @Service
 public class StudentServiceImpl implements StudentService {
 
-    private StudentRepository studentRepository;
+    public StudentRepository studentRepository;
 
-    private StudyProgramRepository studyProgramRepository;
+    public StudyProgramRepository studyProgramRepository;
 
     @Autowired
     public StudentServiceImpl(StudentRepository studentRepository, StudyProgramRepository studyProgramRepository){
@@ -50,10 +51,27 @@ public class StudentServiceImpl implements StudentService {
         this.studentRepository.deleteById(id);
     }
 
-    public boolean addStudent(String index, String name, String lastName, Long studyProgram) {
+    public boolean addStudent(String index, String name, String lastName, String studyProgram) {
 
         if(this.studentRepository.findById(index).isPresent()) return false;
-        this.studentRepository.save(new Student(index,name,lastName,studyProgram));
+
+        if(index==null || name==null || lastName==null || studyProgram==null){
+            //throw new ParameterMissingException();
+            return false;
+        }
+
+        if(!(index.length()==6) || !index.matches("[0-9]+")) {
+           //throw new InvalidIndexFormatException();
+            return false;
+        }
+
+        Optional<StudyProgram> sp = this.studyProgramRepository.findByName(studyProgram);
+        if(!sp.isPresent()) {
+            return false;
+            //throw new StudyProgramNotFoundException();
+        }
+
+        this.studentRepository.save(new Student(index,name,lastName,sp.get().getId()));
         return true;
 
     }
@@ -74,11 +92,14 @@ public class StudentServiceImpl implements StudentService {
     }
 
     public List<Student> findAllByStudyProgram(Long id){
-        return this.studentRepository.findByStudyProgram(id);
+      if(this.studentRepository.findAllByStudyProgram(id).isPresent())
+          return this.studentRepository.findAllByStudyProgram(id).get();
+      return null;
     }
 
-    public StudyProgram findByName(String nameStudyProgram){
+    public Optional<StudyProgram> findByName(String nameStudyProgram){
         return this.studyProgramRepository.findByName(nameStudyProgram);
+
     }
 
 

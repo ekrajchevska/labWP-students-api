@@ -1,6 +1,7 @@
 package mk.finki.ukim.wp.studentsapi.service.impl;
 
 import mk.finki.ukim.wp.studentsapi.model.StudyProgram;
+import mk.finki.ukim.wp.studentsapi.repository.StudentRepository;
 import mk.finki.ukim.wp.studentsapi.repository.StudyProgramRepository;
 import mk.finki.ukim.wp.studentsapi.service.StudyProgramService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,7 @@ import java.util.Optional;
 @Service
 public class StudyProgramServiceImpl implements StudyProgramService {
 
-    private StudyProgramRepository studyProgramRepository;
+    public StudyProgramRepository studyProgramRepository;
 
     public StudyProgramServiceImpl(){}
 
@@ -28,18 +29,24 @@ public class StudyProgramServiceImpl implements StudyProgramService {
         return null;
     }
 
+    public StudyProgram getStudyProgramByName(String studyName){
+        Optional<StudyProgram> sp = this.studyProgramRepository.findByName(studyName);
+        if(sp.isPresent()) return sp.get();
+        return null;
+    }
+
     public List<StudyProgram> getAllStudyPrograms(){
         return this.studyProgramRepository.findAll();
     }
 
     public void addStudyProgram(String name){
-        StudyProgram exists = this.studyProgramRepository.findByName(name);
-        if(exists!=null) return;
+        Optional<StudyProgram> exists = this.studyProgramRepository.findByName(name);
+        if(exists.isPresent()) return;
         this.studyProgramRepository.save(new StudyProgram(name));
     }
 
     public void deleteStudyProgram(Long id){
-        this.studyProgramRepository.deleteById(id);
+       this.studyProgramRepository.deleteById(id);
     }
 
     public void updateStudyProgram(StudyProgram studyProgram){

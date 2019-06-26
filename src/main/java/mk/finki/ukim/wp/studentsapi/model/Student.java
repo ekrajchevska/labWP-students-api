@@ -28,6 +28,10 @@ public class Student {
         this.studyProgram = studyProgram;
     }
 
+    public Student(String index){
+        this.index = index;
+    }
+
     public String getIndex() {
         return index;
     }

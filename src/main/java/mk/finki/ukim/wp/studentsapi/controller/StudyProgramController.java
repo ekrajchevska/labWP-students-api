@@ -7,8 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
-import java.util.Optional;
 
 @CrossOrigin({"http://localhost:3000"})
 @RestController
@@ -32,7 +32,7 @@ public class StudyProgramController {
         return new ResponseEntity<>(studyProgram,HttpStatus.OK);
     }
 
-    @PutMapping("/study_programs/{id}")
+    @PatchMapping("/study_programs/{id}")
     public ResponseEntity<StudyProgram> modifyStudyProgram(@PathVariable Long id,
                                                            @RequestBody StudyProgram studyProgram){
         StudyProgram sp = this.studyProgramServiceImpl.getStudyProgramById(id);
@@ -53,13 +53,16 @@ public class StudyProgramController {
 
     // 8)
     @PostMapping("/study_programs")
-    public void addStudyProgram(@RequestBody StudyProgram studyProgram){
+    public void addStudyProgram(@RequestBody StudyProgram studyProgram,
+                                HttpServletResponse response){
+        response.setStatus(201);
         this.studyProgramServiceImpl.addStudyProgram(studyProgram.getName());
     }
 
     // 9)
     @DeleteMapping("/study_programs/{id}")
     public void deleteStudyProgram(@PathVariable Long id){
+
         this.studyProgramServiceImpl.deleteStudyProgram(id);
     }
 

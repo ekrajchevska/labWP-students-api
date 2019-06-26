@@ -3,17 +3,18 @@ package mk.finki.ukim.wp.studentsapi.controller;
 import mk.finki.ukim.wp.studentsapi.model.Student;
 import mk.finki.ukim.wp.studentsapi.model.StudentInput;
 import mk.finki.ukim.wp.studentsapi.model.StudyProgram;
-import mk.finki.ukim.wp.studentsapi.model.exceptions.InvalidIndexFormatException;
 import mk.finki.ukim.wp.studentsapi.model.exceptions.ParameterMissingException;
 import mk.finki.ukim.wp.studentsapi.model.exceptions.StudentNotFoundException;
 import mk.finki.ukim.wp.studentsapi.model.exceptions.StudyProgramNotFoundException;
 import mk.finki.ukim.wp.studentsapi.service.impl.StudentServiceImpl;
+import mk.finki.ukim.wp.studentsapi.service.impl.StudyProgramServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,12 +23,17 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class StudentController {
 
-    private StudentServiceImpl studentServiceImpl;
+    public StudentServiceImpl studentServiceImpl;
+    public StudyProgramServiceImpl studyProgramServiceImpl;
 
     public StudentController(){}
 
     @Autowired
-    public StudentController(StudentServiceImpl studentServiceImpl){this.studentServiceImpl = studentServiceImpl;}
+    public StudentController(StudentServiceImpl studentServiceImpl,
+                             StudyProgramServiceImpl studyProgramServiceImpl){
+        this.studentServiceImpl = studentServiceImpl;
+        this.studyProgramServiceImpl = studyProgramServiceImpl;
+    }
 
     // 1)
     @GetMapping("/students")
@@ -55,39 +61,25 @@ public class StudentController {
 
     // 4)
     @PostMapping("/students")
-    public void addStudent(HttpServletResponse response, @RequestBody StudentInput s) throws ParameterMissingException{
-        if(s.index==null || s.name==null || s.lastName==null || s.studyProgram==null){
-            response.setStatus(400);
-            throw new ParameterMissingException();
-        }
+    public ResponseEntity addStudent(@RequestBody StudentInput s,
+                                     HttpServletResponse response) throws ParameterMissingException{
 
-        int index = Integer.parseInt(s.index);
-        if(index/100000>0) {
-            response.setStatus(400);
-            throw new InvalidIndexFormatException();
-        }
-
-        StudyProgram studyProgram = this.studentServiceImpl.findByName(s.studyProgram);
-        if(studyProgram==null) {
-            response.setStatus(400);
-            throw new StudyProgramNotFoundException();
-        }
-
-        if(this.studentServiceImpl.addStudent(s.index,s.name,s.lastName,studyProgram.getId())) {
+        if(this.studentServiceImpl.addStudent(s.index,s.name,s.lastName,s.studyProgram)) {
             response.setHeader("Location", "localhost:8080/students/"+s.index);
-            response.setStatus(201);
+            return ResponseEntity.status(201).build();
         }else{
-            response.setStatus(409); // HttpStatus.CONFLICT
+            return ResponseEntity.status(409).build();
         }
+
     }
 
     // 5)
-    @PutMapping("/students/{index}")
+    @PatchMapping("/students/{index}")
     public ResponseEntity<Student> modifyStudent(HttpServletResponse response,
                                                  @PathVariable String index,
                                                  @RequestBody StudentInput student){
 
-        Optional<Student> s = this.studentServiceImpl.getStudentById(index);
+        Optional<Student> s =   this.studentServiceImpl.getStudentById(index);
         if(s.isPresent()){
             Student studentToModify = s.get();
 
@@ -95,8 +87,9 @@ public class StudentController {
             if(student.name!=null) studentToModify.setName(student.name);
             if(student.lastName!=null) studentToModify.setLastName(student.lastName);
             if(student.studyProgram!=null){
-                StudyProgram studyProgram = this.studentServiceImpl.findByName(student.studyProgram);
-                if(studyProgram==null) {
+                StudyProgram studyProgram = this.studyProgramServiceImpl
+                        .getStudyProgramByName(student.studyProgram);
+                if(studyProgram == null) {
                     response.setStatus(400);
                     throw new StudyProgramNotFoundException();
                 }

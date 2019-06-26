@@ -15,12 +15,10 @@ public interface StudentService {
 
     void deleteStudentById(String id);
 
-    boolean addStudent(String index, String name, String lastName, Long studyProgram);
+    boolean addStudent(String index, String name, String lastName, String studyProgram);
 
     void modifyStudent(Student modified);
 
     List<Student> findAllByStudyProgram(Long id);
-
-    StudyProgram findByName(String nameStudyProgram);
 
 }
